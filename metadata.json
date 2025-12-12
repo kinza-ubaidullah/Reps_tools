@@ -1,0 +1,8 @@
+{
+  "name": "AnyReps - China Tour Tools",
+  "description": "Clear stress free tools for your china tour. Track convert, and discover all in one sleek workspace",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
