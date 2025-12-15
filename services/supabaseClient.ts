@@ -18,4 +18,10 @@ export const isSupabaseConfigured = isValidUrl(SUPABASE_URL) &&
                                     !SUPABASE_URL.includes('placeholder') && 
                                     SUPABASE_ANON_KEY !== 'placeholder-key';
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true
+    }
+});

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Navbar } from './components/Layout/Navbar';
@@ -92,6 +91,9 @@ const App: React.FC = () => {
       } else {
           setSessionLoading(false);
       }
+    }).catch(err => {
+      console.error("Auth session check failed", err);
+      setSessionLoading(false);
     });
 
     // 2. Listen for changes (Login, Logout, Auto-refresh)
