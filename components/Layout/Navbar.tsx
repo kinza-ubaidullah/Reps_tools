@@ -20,22 +20,23 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onLoginClick, onLogout }) 
   const navLinks = [
     { label: 'Home', id: 'hero-section', path: '/' },
     { label: 'Tools', id: 'tools-section', paths: ['/calculator', '/converter', '/search', '/tracking', '/qc'] },
-    { label: 'Products', id: 'products-section', paths: ['/search'] },
+    { label: 'Products', id: 'products-section', path: '/products' },
     { label: 'Community', id: 'community-section', paths: ['/community', '/sellers', '/wishlist'] },
   ];
 
   // Handle active state based on Route or Scroll
   useEffect(() => {
-    // 1. If we are NOT on the home page, set active based on URL path
+    // 1. If we are NOT on the home page (or on the products subpage), set active based on URL path
     if (location.pathname !== '/') {
       const currentPath = location.pathname;
       const matchingLink = navLinks.find(link => 
-        link.paths && link.paths.some(p => currentPath.startsWith(p))
+        (link.path === currentPath) ||
+        (link.paths && link.paths.some(p => currentPath.startsWith(p)))
       );
       if (matchingLink) {
         setActiveSection(matchingLink.id);
       } else {
-        setActiveSection(''); // No active link for unknown routes like /profile or /admin
+        setActiveSection(''); 
       }
       return; 
     }
@@ -67,17 +68,24 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onLoginClick, onLogout }) 
     return () => window.removeEventListener('scroll', handleScroll);
   }, [location.pathname]);
 
-  const handleNavClick = (sectionId: string) => {
+  const handleNavClick = (link: typeof navLinks[0]) => {
     setIsMobileMenuOpen(false); // Close mobile menu
 
+    // If it's a direct route link (like /products)
+    if (link.path && link.path !== '/') {
+        navigate(link.path);
+        return;
+    }
+
+    // Default Anchor Logic (Home sections)
     if (location.pathname !== '/') {
       navigate('/');
       // Timeout to allow navigation to complete before scrolling
       setTimeout(() => {
-        scrollToSection(sectionId);
+        scrollToSection(link.id);
       }, 100);
     } else {
-      scrollToSection(sectionId);
+      scrollToSection(link.id);
     }
   };
 
@@ -127,7 +135,7 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onLoginClick, onLogout }) 
         {navLinks.map((link) => (
             <button
                 key={link.label}
-                onClick={() => handleNavClick(link.id)}
+                onClick={() => handleNavClick(link)}
                 className={`px-6 py-2 rounded-full text-sm font-bold transition-all duration-300 ${
                   activeSection === link.id 
                     ? 'bg-white/10 text-white shadow-inner' 
@@ -212,7 +220,7 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onLoginClick, onLogout }) 
                 {navLinks.map((link) => (
                     <button
                         key={link.label}
-                        onClick={() => handleNavClick(link.id)}
+                        onClick={() => handleNavClick(link)}
                         className={`text-4xl font-bold transition-all duration-300 ${
                           activeSection === link.id ? 'text-primary scale-110' : 'text-white hover:text-gray-300'
                         }`}

@@ -24,7 +24,10 @@ import { Loader2 } from 'lucide-react';
 const ScrollToTop = () => {
   const { pathname } = useLocation();
   useEffect(() => {
-    window.scrollTo(0, 0);
+    // Only scroll to top if we are NOT on the /products subpage (which handles its own scrolling)
+    if (pathname !== '/products') {
+        window.scrollTo(0, 0);
+    }
   }, [pathname]);
   return null;
 };
@@ -85,7 +88,7 @@ const App: React.FC = () => {
     // 1. Check active session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-          fetchUserProfile(session.user.id);
+          fetchUserProfile(session.user.id, session.user.email);
       } else {
           setSessionLoading(false);
       }
@@ -96,7 +99,7 @@ const App: React.FC = () => {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session) {
-        fetchUserProfile(session.user.id);
+        fetchUserProfile(session.user.id, session.user.email);
       } else {
         setUser(null);
         setSessionLoading(false);
@@ -106,25 +109,52 @@ const App: React.FC = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const fetchUserProfile = async (userId: string) => {
+  const fetchUserProfile = async (userId: string, userEmail?: string) => {
       try {
-          const { data, error } = await supabase
+          let { data, error } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', userId)
             .single();
           
-          if (error) throw error;
+          // Handle "Row not found" or missing profile by creating one
+          // This fixes issues where signups don't trigger database triggers
+          if (!data) {
+             console.log("Profile missing, creating default profile for:", userId);
+             const newProfile = {
+                id: userId,
+                username: userEmail?.split('@')[0] || 'User',
+                avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${userId}`,
+                banner_url: '',
+                rank: Rank.BRONZE,
+                reputation: 0,
+                description: 'Community Member'
+             };
+
+             const { data: createdData, error: insertError } = await supabase
+                .from('profiles')
+                .insert([newProfile])
+                .select()
+                .single();
+             
+             if (insertError) {
+                 console.error("Failed to auto-create profile:", insertError);
+                 // Fallback to local object so the app works even if DB insert fails temporarily
+                 data = newProfile; 
+             } else {
+                 data = createdData;
+             }
+          }
           
           if (data) {
               setUser({
                   id: data.id,
                   username: data.username || 'User',
-                  email: '', // Email is in auth object
+                  email: userEmail || '', // Email is in auth object
                   avatar: data.avatar_url,
                   banner: data.banner_url || '', // Fetch banner
-                  rank: data.rank as Rank,
-                  reputation: data.reputation,
+                  rank: (data.rank as Rank) || Rank.BRONZE,
+                  reputation: data.reputation || 0,
                   joinDate: data.created_at || new Date().toISOString(),
                   description: data.description || 'Community Member' // Fetch description
               });
@@ -167,6 +197,7 @@ const App: React.FC = () => {
                 <Routes>
                 {/* Core Routes */}
                 <Route path="/" element={<Home />} />
+                <Route path="/products" element={<Home />} />
                 
                 {/* Feature Routes */}
                 <Route path="/calculator" element={<ShippingCalculator />} />

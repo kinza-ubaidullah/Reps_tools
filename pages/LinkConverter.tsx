@@ -1,8 +1,19 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Link, Copy, Check, ArrowLeft, ExternalLink, RotateCcw, Search, Smartphone, Globe } from 'lucide-react';
+import { Link, Copy, Check, ArrowLeft, ExternalLink, RotateCcw, Smartphone, Globe } from 'lucide-react';
 import { MOCK_AGENTS } from '../constants';
+
+// Configure your affiliate codes here
+const REF_CODES: Record<string, string> = {
+    'cnfans': 'AnyReps',
+    'mulebuy': 'AnyReps',
+    'joyagoo': 'AnyReps',
+    'kakobuy': 'AnyReps',
+    'litbuy': 'AnyReps',
+    'sugargoo': '', // Add specific member ID if needed
+    'orientdig': 'AnyReps'
+};
 
 export const LinkConverter: React.FC = () => {
   const navigate = useNavigate();
@@ -12,77 +23,136 @@ export const LinkConverter: React.FC = () => {
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState('');
 
-  // --- CUSTOM BUILD CONVERTER LOGIC ---
-  // This runs completely client-side using robust regex patterns.
-  // It effectively replaces the need for a simple conversion API.
   const handleConvert = () => {
     if (!inputLink) return;
     setError('');
     setConvertedLink('');
     
     let itemId = '';
-    let platform = '';
-    let rawLink = inputLink;
+    let platform = ''; // 'taobao', 'weidian', '1688'
+    const rawLink = inputLink.trim();
 
-    // 1. Handle Mobile/Short Links (Basic decoding if it's a redirect, otherwise needs backend)
-    // Note: True short link expansion (e.g. m.tb.cn) usually requires a backend fetch to follow redirects.
-    // Here we handle recognizable patterns in standard mobile URLs.
+    // ---------------------------------------------------------
+    // 1. PARSE INPUT (Support Raw Links & Agent Links)
+    // ---------------------------------------------------------
     
-    // 2. Regex Extraction Strategy
-    const patterns = [
-        { regex: /[?&]id=(\d+)/, platform: 'taobao' },
-        { regex: /item\.taobao\.com\/item\.htm\?.*id=(\d+)/, platform: 'taobao' },
-        { regex: /[?&]itemID=(\d+)/, platform: 'weidian' },
-        { regex: /weidian\.com\/item\.html\?.*itemID=(\d+)/, platform: 'weidian' },
-        { regex: /offer\/(\d+)\.html/, platform: '1688' },
-        { regex: /detail\.1688\.com\/offer\/(\d+)/, platform: '1688' }
-    ];
+    try {
+        // Attempt to parse as URL object to easily access query params
+        // This handles standard URLs: https://...
+        const urlObj = new URL(rawLink);
+        const params = new URLSearchParams(urlObj.search);
 
-    for (const p of patterns) {
-        const match = rawLink.match(p.regex);
-        if (match && match[1]) {
-            itemId = match[1];
-            platform = p.platform;
-            break;
+        // A. Extract ID from params (Common across agents and marketplaces)
+        // Checks for id, itemID (Weidian), num_iid (Taobao), offerId (1688)
+        if (params.get('id')) itemId = params.get('id')!;
+        else if (params.get('itemID')) itemId = params.get('itemID')!;
+        else if (params.get('num_iid')) itemId = params.get('num_iid')!;
+        else if (params.get('offerId')) itemId = params.get('offerId')!;
+
+        // B. Extract Platform from params (Crucial for Agent links which have shop_type)
+        const typeParam = params.get('shop_type') || params.get('type') || params.get('platform');
+        if (typeParam) {
+             const t = typeParam.toLowerCase();
+             if (t.includes('weidian')) platform = 'weidian';
+             else if (t.includes('taobao') || t.includes('tmall')) platform = 'taobao';
+             else if (t.includes('1688') || t.includes('ali')) platform = '1688';
         }
+
+        // C. If platform not found in params, check domain name
+        if (!platform) {
+            const hostname = urlObj.hostname.toLowerCase();
+            if (hostname.includes('weidian') || hostname.includes('koudai')) platform = 'weidian';
+            else if (hostname.includes('taobao') || hostname.includes('tmall')) platform = 'taobao';
+            else if (hostname.includes('1688')) platform = '1688';
+        }
+
+    } catch (e) {
+        // Not a standard URL object (might be a partial string), proceed to regex fallback
     }
 
+    // 2. FALLBACK REGEX (If URL parsing failed or missed ID)
     if (!itemId) {
-        setError("Could not detect a valid Product ID. Please ensure the link is a full URL from Taobao, Weidian, or 1688.");
+        // 1688 standard path
+        const m1688 = rawLink.match(/offer\/(\d+)\.html/);
+        if (m1688) { itemId = m1688[1]; platform = '1688'; }
+        
+        // Weidian standard (Case insensitive for itemID)
+        const mWeidian = rawLink.match(/itemID=(\d+)/i);
+        if (mWeidian) { itemId = mWeidian[1]; platform = 'weidian'; }
+        
+        // Taobao standard
+        const mTaobao = rawLink.match(/id=(\d+)/i);
+        if (mTaobao) { itemId = mTaobao[1]; if(!platform) platform = 'taobao'; }
+    }
+
+    // 3. ROBUST PLATFORM CHECK (Final Safety Net)
+    // If ID found but Platform still missing (e.g. URL parsing worked for ID but hostname check failed)
+    if (itemId && !platform) {
+        const lowerLink = rawLink.toLowerCase();
+        if (lowerLink.includes('weidian') || lowerLink.includes('koudai')) platform = 'weidian';
+        else if (lowerLink.includes('1688')) platform = '1688';
+        else if (lowerLink.includes('taobao') || lowerLink.includes('tmall')) platform = 'taobao';
+    }
+
+    // 4. DEFAULT
+    // Default to Taobao as it's the most common if still undetected
+    if (itemId && !platform) platform = 'taobao';
+
+    if (!itemId) {
+        setError("Could not detect a valid Product ID. Please ensure the link is a valid product URL from a marketplace or agent.");
         return;
     }
 
-    // 3. Construct Clean Source URL
-    let cleanSourceUrl = '';
-    if (platform === 'taobao') cleanSourceUrl = `https://item.taobao.com/item.htm?id=${itemId}`;
-    if (platform === 'weidian') cleanSourceUrl = `https://weidian.com/item.html?itemID=${itemId}`;
-    if (platform === '1688') cleanSourceUrl = `https://detail.1688.com/offer/${itemId}.html`;
+    // ---------------------------------------------------------
+    // 5. GENERATE AGENT LINK
+    // ---------------------------------------------------------
 
-    // 4. Generate Agent Link
     const agent = MOCK_AGENTS.find(a => a.id === selectedAgent);
     if (!agent) return;
 
     let finalLink = '';
     const agentName = agent.name.toLowerCase();
+    const refCode = REF_CODES[agentName.replace(/[^a-z]/g, '')] || '';
 
-    // Custom Logic for specific agents
+    // Construct Clean Source URL (Required for some agents like Sugargoo/Superbuy)
+    let cleanSourceUrl = '';
+    if (platform === 'taobao') cleanSourceUrl = `https://item.taobao.com/item.htm?id=${itemId}`;
+    if (platform === 'weidian') cleanSourceUrl = `https://weidian.com/item.html?itemID=${itemId}`;
+    if (platform === '1688') cleanSourceUrl = `https://detail.1688.com/offer/${itemId}.html`;
+
+    // Agent-Specific Construction
     if (agentName.includes('cnfans')) {
         finalLink = `https://cnfans.com/product/?shop_type=${platform}&id=${itemId}`;
+        if (refCode) finalLink += `&ref=${refCode}`;
     } 
     else if (agentName.includes('mulebuy')) {
         finalLink = `https://mulebuy.com/product/?shop_type=${platform}&id=${itemId}`;
+        if (refCode) finalLink += `&ref=${refCode}`;
     }
-    else if (agentName.includes('superbuy')) {
-        finalLink = `https://www.superbuy.com/en/page/buy?nTag=Home-search&from=search-input&url=${encodeURIComponent(cleanSourceUrl)}`;
-    } 
-    else if (agentName.includes('sugargoo')) {
-        finalLink = `https://www.sugargoo.com/#/home/productDetail?productLink=${encodeURIComponent(cleanSourceUrl)}`;
+    else if (agentName.includes('litbuy')) {
+        finalLink = `https://www.litbuy.com/product/?shop_type=${platform}&id=${itemId}`;
+        if (refCode) finalLink += `&ref=${refCode}`;
+    }
+    else if (agentName.includes('joyagoo')) {
+        // JoyaGoo typically uses 'tp' or 'type' for shop type
+        finalLink = `https://joyagoo.com/index/item/index.html?tp=${platform}&id=${itemId}`;
+        if (refCode) finalLink += `&ref=${refCode}`;
     }
     else if (agentName.includes('kakobuy')) {
         finalLink = `https://www.kakobuy.com/item/details?url=${encodeURIComponent(cleanSourceUrl)}`;
+        if (refCode) finalLink += `&aff=${refCode}`;
     }
-    else if (agentName.includes('joyagoo')) {
-        finalLink = `https://joyagoo.com/index/item/index.html?tp=${platform}&id=${itemId}`;
+    else if (agentName.includes('superbuy')) {
+        finalLink = `https://www.superbuy.com/en/page/buy?nTag=Home-search&from=search-input&url=${encodeURIComponent(cleanSourceUrl)}`;
+        if (refCode) finalLink += `&partnercode=${refCode}`;
+    } 
+    else if (agentName.includes('sugargoo')) {
+        finalLink = `https://www.sugargoo.com/#/home/productDetail?productLink=${encodeURIComponent(cleanSourceUrl)}`;
+        if (refCode) finalLink += `&memberId=${refCode}`;
+    }
+    else if (agentName.includes('orientdig')) {
+        finalLink = `https://orientdig.com/product/?shop_type=${platform}&id=${itemId}`;
+        if (refCode) finalLink += `&ref=${refCode}`;
     }
     else {
         // Generic Fallback
@@ -132,8 +202,9 @@ export const LinkConverter: React.FC = () => {
                 <Globe className="text-primary" /> Universal Link Engine
             </h2>
             <p className="text-[#666] mb-8 font-medium">
-                Our custom-built engine instantly converts raw Taobao, Weidian, and 1688 links into your preferred agent link. 
-                <span className="text-primary ml-1">No external API required.</span>
+                Our custom-built engine instantly converts raw Taobao, Weidian, 1688, and 
+                <span className="text-white"> existing agent links</span> into your preferred agent link. 
+                <span className="text-primary ml-1 block mt-1 text-xs uppercase tracking-wide font-bold">Now with Auto-Referral Injection</span>
             </p>
 
             {/* GUIDANCE BOX */}
@@ -143,8 +214,8 @@ export const LinkConverter: React.FC = () => {
                         <Smartphone size={18} />
                     </div>
                     <div className="text-sm">
-                        <span className="block font-bold text-white">Mobile Links Supported</span>
-                        <span className="text-[#666]">Engine auto-detects IDs from most mobile URLs.</span>
+                        <span className="block font-bold text-white">Smart Parsing</span>
+                        <span className="text-[#666]">Works with direct links and agent links (e.g. from Mulebuy to CNFans).</span>
                     </div>
                 </div>
             </div>
@@ -177,7 +248,7 @@ export const LinkConverter: React.FC = () => {
                             type="text" 
                             value={inputLink}
                             onChange={(e) => setInputLink(e.target.value)}
-                            placeholder="Paste Taobao, Weidian or 1688 link..."
+                            placeholder="Paste link (Raw or Agent)..."
                             className="flex-1 bg-[#0A0A0A] border border-[#222] rounded-xl p-4 text-white focus:border-white/20 outline-none text-sm font-medium"
                         />
                         <button 

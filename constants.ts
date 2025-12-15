@@ -77,6 +77,34 @@ export const MOCK_AGENTS: Agent[] = [
     ]
   },
   {
+    id: 'agent_litbuy',
+    name: 'LitBuy',
+    website: 'https://www.litbuy.com',
+    logo: 'https://placehold.co/100x100/8b5cf6/white?text=LB',
+    shippingLines: [
+      {
+        name: 'Lit Express',
+        minWeight: 0,
+        maxWeight: 5000,
+        basePrice: 19,
+        pricePer500g: 7,
+        deliveryDaysMin: 8,
+        deliveryDaysMax: 15,
+        features: ['Priority']
+      },
+      {
+        name: 'Lit Tax Free',
+        minWeight: 0,
+        maxWeight: 10000,
+        basePrice: 24,
+        pricePer500g: 7.8,
+        deliveryDaysMin: 12,
+        deliveryDaysMax: 20,
+        features: ['Tax Free']
+      }
+    ]
+  },
+  {
     id: 'agent_sugargoo',
     name: 'SUGARGOO',
     website: 'https://sugargoo.com',

@@ -64,6 +64,7 @@ const BrandList = () => (
             <span className="text-lg font-bold text-[#888] hover:text-white transition-colors cursor-pointer">Mulebuy</span>
             <span className="text-lg font-bold text-[#888] hover:text-white transition-colors cursor-pointer font-mono">KakoBuy</span>
             <span className="text-lg font-bold text-[#888] hover:text-white transition-colors italic cursor-pointer">OrientDig</span>
+            <span className="text-lg font-bold text-[#888] hover:text-white transition-colors cursor-pointer">LitBuy</span>
         </div>
     </div>
 );
@@ -306,6 +307,11 @@ const SupportedAgents = () => (
                     OrientDig
                  </div>
 
+                 {/* LitBuy - Purple */}
+                 <div className="text-2xl font-bold text-purple-500 hover:opacity-80 cursor-pointer transition-opacity">
+                    LitBuy
+                 </div>
+
                  {/* Copbuy - Pink */}
                  <div className="text-2xl font-bold text-pink-600 hover:opacity-80 cursor-pointer transition-opacity">
                     Copbuy
@@ -380,17 +386,21 @@ const Footer = () => (
 export const Home: React.FC = () => {
   const location = useLocation();
 
-  // Handle auto-scrolling when returning from other pages
+  // Handle auto-scrolling
   useEffect(() => {
+    // Priority 1: State scrollTo (from other pages)
     if (location.state && location.state.scrollTo) {
         const sectionId = location.state.scrollTo;
         const element = document.getElementById(sectionId);
-        
-        // Timeout to ensure DOM is ready
         setTimeout(() => {
-            if (element) {
-                element.scrollIntoView({ behavior: 'smooth' });
-            }
+            if (element) element.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+    } 
+    // Priority 2: Products Subpage Route
+    else if (location.pathname === '/products') {
+        const element = document.getElementById('products-section');
+        setTimeout(() => {
+            if (element) element.scrollIntoView({ behavior: 'smooth' });
         }, 100);
     }
   }, [location]);

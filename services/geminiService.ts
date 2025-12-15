@@ -2,19 +2,8 @@
 import { GoogleGenAI } from "@google/genai";
 import { TrackingStep } from '../types';
 
-// Integrated Key provided by client
-// Note: In production, this should ideally be in process.env, but for this integration we use the provided key.
-const API_KEY = 'AIzaSyBqGGaFoVG8BBV-3_gHhUz3-kqlDVLUwVA';
-
-let ai: GoogleGenAI | null = null;
-
-try {
-    if (API_KEY) {
-        ai = new GoogleGenAI({ apiKey: API_KEY });
-    }
-} catch (e) {
-    console.warn("Gemini Client Init Failed", e);
-}
+// Initialize Gemini Client using the environment variable as required
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 /**
  * Analyzes complex tracking logs to provide a human-readable summary and estimate.
@@ -23,7 +12,7 @@ export const analyzeTrackingStatus = async (steps: TrackingStep[]): Promise<stri
   // FALLBACK MOCK RESPONSE
   const mockAnalysis = "The package is currently in transit. Based on typical routes, it has cleared customs and is moving towards the destination country. Expect delivery within 5-7 days.";
 
-  if (!ai || !API_KEY || steps.length === 0) {
+  if (!steps || steps.length === 0) {
       return mockAnalysis;
   }
 
@@ -55,12 +44,6 @@ export const analyzeTrackingStatus = async (steps: TrackingStep[]): Promise<stri
 export const identifyProductFromImage = async (base64Image: string): Promise<string[]> => {
     // FALLBACK MOCK KEYWORDS
     const mockKeywords = ["Sneakers", "Jordan 4", "Streetwear", "Nike", "Black Cat"];
-
-    if (!ai || !API_KEY) {
-        // Simulate network delay for realism
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        return mockKeywords;
-    }
 
     try {
         const response = await ai.models.generateContent({

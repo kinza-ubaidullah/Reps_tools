@@ -32,12 +32,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose }) => {
 
     setLoading(true);
 
+    const cleanEmail = email.trim();
+    const cleanPassword = password.trim();
+    const cleanUsername = username.trim();
+
     try {
         if (isLogin) {
             // LOGIN
             const { error } = await supabase.auth.signInWithPassword({
-                email,
-                password,
+                email: cleanEmail,
+                password: cleanPassword,
             });
             if (error) throw error;
             // Success: App.tsx listener will handle the rest
@@ -45,12 +49,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose }) => {
         } else {
             // SIGNUP
             const { error } = await supabase.auth.signUp({
-                email,
-                password,
+                email: cleanEmail,
+                password: cleanPassword,
                 options: {
+                    // We keep emailRedirectTo for email links as it helps users return to the correct page
+                    emailRedirectTo: window.location.origin,
                     data: {
-                        username: username,
-                        avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`
+                        username: cleanUsername,
+                        avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${cleanUsername}`
                     }
                 }
             });
@@ -68,6 +74,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose }) => {
             return; 
         } else if (msg.includes('Invalid login credentials')) {
             msg = 'Incorrect email or password. Please try again.';
+        } else if (msg.toLowerCase().includes('invalid email')) {
+            msg = 'The email address format is invalid. Check for spaces.';
         }
         
         setError(msg);
@@ -78,10 +86,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose }) => {
 
   const handleResendEmail = async () => {
     setResendLoading(true);
+    const cleanEmail = email.trim();
     try {
         const { error } = await supabase.auth.resend({
             type: 'signup',
-            email: email,
+            email: cleanEmail,
             options: {
                 emailRedirectTo: window.location.origin
             }
@@ -105,13 +114,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose }) => {
       setError('');
 
       try {
-          // Simplification: We do NOT pass an explicit redirectTo for social logins.
-          // This allows Supabase to use the "Site URL" defined in the dashboard,
-          // which avoids mismatch errors when the URL is slightly different (e.g. trailing slash).
+          // Explicitly setting redirectTo ensures the user comes back to the exact same environment (localhost or vercel)
+          // This REQUIRES the URL (e.g., http://localhost:5173/**) to be whitelisted in Supabase Dashboard > Auth > URL Configuration.
           const { error } = await supabase.auth.signInWithOAuth({
               provider: provider,
-              // If you need a specific redirect (e.g. local dev), uncomment below:
-              // options: { redirectTo: window.location.origin } 
+              options: {
+                  redirectTo: window.location.origin
+              }
           });
           
           if (error) throw error;
@@ -119,8 +128,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose }) => {
           setLoading(false);
           console.error("Social Auth Error:", err);
           
+          // Helper messages for common configuration errors
           if (err.message && (err.message.includes('provider is not enabled') || err.message.includes('supported'))) {
               setError(`The ${provider} login is not enabled in your Supabase Dashboard. Please enable it in 'Auth > Providers'.`);
+          } else if (err.message && (err.message.includes('redirect_uri_mismatch') || err.message.includes('Mismatching redirect URI'))) {
+               setError(`Configuration Error: Please add "${window.location.origin}/**" to Redirect URLs in your Supabase Dashboard.`);
           } else {
               setError(err.message || "An error occurred during social login.");
           }
@@ -204,8 +216,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose }) => {
             <div className="flex gap-2 items-start bg-[#161616] p-2 rounded-lg border border-white/5">
                 <Info size={14} className="text-yellow-500 shrink-0 mt-0.5" />
                 <p className="text-[10px] text-[#888] leading-tight">
-                    Social login must be <b>Enabled</b> in your Supabase Dashboard (Auth &gt; Providers) for this to work. 
-                    See Admin Dashboard for redirect URI setup.
+                    <b>Setup Required:</b> Ensure <code>{window.location.origin}/**</code> is added to <b>Redirect URLs</b> in Supabase Auth Settings.
                 </p>
             </div>
           </div>
