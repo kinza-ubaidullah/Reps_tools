@@ -15,7 +15,7 @@ const router = createHashRouter(
     // Use a wildcard so paths like '/error=...' and OAuth callback fragments land inside App
     { path: '/*', element: <App /> }
   ],
-  { future: { v7_startTransition: true, v7_relativeSplatPath: true } }
+  { future: { v7_relativeSplatPath: true } }
 );
 
 root.render(
