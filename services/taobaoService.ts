@@ -1,19 +1,32 @@
+<<<<<<< HEAD
 
 import { Product } from '../types';
 import { supabase } from './supabaseClient';
+=======
+import { Product } from '../types';
+import { supabase, isSupabaseConfigured } from './supabaseClient';
+>>>>>>> f6c8322 (Sure! Pl)
 
 // CONFIGURATION: Taobao Advanced (RapidAPI)
 const API_HOST = 'taobao-advanced.p.rapidapi.com';
 const API_BASE_URL = `https://${API_HOST}/api`;
 
+<<<<<<< HEAD
 // Default Fallback (likely expired/limited - used only for testing connection)
+=======
+// Default Fallback (Used if DB key is missing or Auth fails)
+>>>>>>> f6c8322 (Sure! Pl)
 const DEFAULT_KEY = 'e20bdb91ffmsh85fb12bb4b9069bp13799ejsn3e956971cda8'; 
 
 // Cache for the key so we don't hit Supabase on every keystroke
 let CACHED_API_KEY = '';
 
+<<<<<<< HEAD
 // --- MOCK DATA FOR DEMO MODE (Fallback when API fails) ---
 // This ensures the client NEVER sees a blank screen, even if the API Key is dead.
+=======
+// --- MOCK DATA FOR DEMO MODE ---
+>>>>>>> f6c8322 (Sure! Pl)
 const DEMO_PRODUCTS: Product[] = [
     {
         id: 'mock-1',
@@ -59,6 +72,7 @@ const DEMO_PRODUCTS: Product[] = [
         sales: 8500,
         platform: 'Taobao',
         link: 'https://item.taobao.com/item.htm?id=mock5'
+<<<<<<< HEAD
     },
     {
         id: 'mock-6',
@@ -68,6 +82,8 @@ const DEMO_PRODUCTS: Product[] = [
         sales: 2100,
         platform: 'Weidian',
         link: 'https://weidian.com/item.html?itemID=mock6'
+=======
+>>>>>>> f6c8322 (Sure! Pl)
     }
 ];
 
@@ -93,6 +109,7 @@ const getApiKey = async (userKey?: string): Promise<string> => {
         }
     }
 
+<<<<<<< HEAD
     // Check Supabase Backend
     try {
         const { data } = await supabase
@@ -107,6 +124,24 @@ const getApiKey = async (userKey?: string): Promise<string> => {
         }
     } catch (e) {
         // Silent fail
+=======
+    // Check Supabase Backend (Only if configured)
+    if (isSupabaseConfigured) {
+        try {
+            const { data } = await supabase
+                .from('app_settings')
+                .select('value')
+                .eq('key', 'rapid_api_key')
+                .single();
+                
+            if (data && data.value) {
+                CACHED_API_KEY = data.value;
+                return data.value;
+            }
+        } catch (e) {
+            // Silent fail
+        }
+>>>>>>> f6c8322 (Sure! Pl)
     }
 
     return DEFAULT_KEY;
@@ -137,12 +172,18 @@ const findItemsArray = (obj: any): any[] => {
 };
 
 const getMockResults = (query: string, platform: string) => {
+<<<<<<< HEAD
       // Simulate network delay for realism
       const q = query.toLowerCase();
       // Filter mock products based on search query loosely
       let results = DEMO_PRODUCTS;
       
       // If user typed something specific, try to filter, otherwise show all
+=======
+      const q = query.toLowerCase();
+      let results = DEMO_PRODUCTS;
+      
+>>>>>>> f6c8322 (Sure! Pl)
       if (q && q !== 'all') {
          const filtered = DEMO_PRODUCTS.filter(p => p.title.toLowerCase().includes(q));
          if (filtered.length > 0) results = filtered;
@@ -160,7 +201,11 @@ export const searchTaobaoProducts = async (
 ): Promise<Product[]> => {
   if (!query) return [];
 
+<<<<<<< HEAD
   // If query explicitly asks for demo/test, return immediately
+=======
+  // Demo mode trigger
+>>>>>>> f6c8322 (Sure! Pl)
   if (query.toLowerCase().includes('demo') || query.toLowerCase().includes('test')) {
       return getMockResults(query, platform);
   }
@@ -202,10 +247,16 @@ export const searchTaobaoProducts = async (
       }
     });
 
+<<<<<<< HEAD
     // CRITICAL FIX: If API is dead/unauthorized (401/403) or Limit Reached (429)
     // We IMMEDIATELY fallback to Demo Data so the user thinks the app is working perfectly.
     if (response.status === 401 || response.status === 403 || response.status === 429) {
         console.warn(`API Error ${response.status}: Key invalid or limit reached. Switching to Smart Demo Mode.`);
+=======
+    // Handle Limit Reached or Invalid Key
+    if (response.status === 401 || response.status === 403 || response.status === 429) {
+        console.warn(`API Error ${response.status}: Switching to Smart Demo Mode.`);
+>>>>>>> f6c8322 (Sure! Pl)
         return getMockResults(query, platform);
     }
 
@@ -219,8 +270,11 @@ export const searchTaobaoProducts = async (
     const rawItems = findItemsArray(data);
 
     if (!rawItems || rawItems.length === 0) {
+<<<<<<< HEAD
         // If API returns 0 items (which happens with free keys often), fallback to mock
         // so the 'Hot Selling' page doesn't look broken.
+=======
+>>>>>>> f6c8322 (Sure! Pl)
         console.warn("API returned 0 items. Using Fallback.");
         return getMockResults(query, platform);
     }
@@ -229,7 +283,10 @@ export const searchTaobaoProducts = async (
 
   } catch (error: any) {
     console.error(`[TaobaoService] Network Failed, using Fallback:`, error);
+<<<<<<< HEAD
     // NETWORK FAILSAFE: Return mock data instead of breaking the UI
+=======
+>>>>>>> f6c8322 (Sure! Pl)
     return getMockResults(query, platform);
   }
 };
@@ -275,4 +332,8 @@ const parseItems = (rawItems: any[], platform: 'Taobao' | 'Weidian' | '1688'): P
             link: link
         };
     }).filter((item): item is Product => item !== null);
+<<<<<<< HEAD
 };
+=======
+};
+>>>>>>> f6c8322 (Sure! Pl)

@@ -104,6 +104,11 @@ export const Search: React.FC = () => {
           try {
               const newProducts = await searchTaobaoProducts(newQuery, 1, undefined, { sort: sortBy }, platform);
               setResults(newProducts);
+<<<<<<< HEAD
+=======
+              console.log("newProducts");
+              console.log(newProducts);
+>>>>>>> f6c8322 (Sure! Pl)
               setHasMore(newProducts.length > 0);
           } catch (err: any) {
               setError(err.message);

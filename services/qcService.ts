@@ -1,6 +1,11 @@
+<<<<<<< HEAD
 
 import CryptoJS from 'crypto-js';
 import { supabase } from './supabaseClient';
+=======
+import CryptoJS from 'crypto-js';
+import { supabase, isSupabaseConfigured } from './supabaseClient';
+>>>>>>> f6c8322 (Sure! Pl)
 
 // --- CONFIGURATION ---
 // Credentials are now fetched from Supabase 'app_settings' table
@@ -15,11 +20,16 @@ const RAPID_API_KEY_DEFAULT = 'e20bdb91ffmsh85fb12bb4b9069bp13799ejsn3e956971cda
 // --- TYPES ---
 export interface QCPhoto {
     url: string;
+<<<<<<< HEAD
     agent: string; // e.g. "PandaBuy" or "Taobao Review"
+=======
+    agent: string; 
+>>>>>>> f6c8322 (Sure! Pl)
     date: string;
     provider?: 'Pointshaul' | 'TaobaoReviews' | 'DemoData' | 'Cached';
 }
 
+<<<<<<< HEAD
 interface PointshaulRequest {
     spuNo: string;
     inviteCode: string;
@@ -30,6 +40,9 @@ interface PointshaulRequest {
 
 // --- MOCK DATA (Smart Fallback) ---
 // Used when API keys are expired or limited, so the user always sees results.
+=======
+// --- MOCK DATA (Smart Fallback) ---
+>>>>>>> f6c8322 (Sure! Pl)
 const MOCK_QC_PHOTOS: QCPhoto[] = [
     { url: "https://images.unsplash.com/photo-1552346154-21d32810aba3?auto=format&fit=crop&w=800&q=80", agent: "Warehouse (Demo)", date: "2024-02-15", provider: "DemoData" },
     { url: "https://images.unsplash.com/photo-1607522370275-f14206abe5d3?auto=format&fit=crop&w=800&q=80", agent: "Warehouse (Demo)", date: "2024-02-18", provider: "DemoData" },
@@ -40,7 +53,12 @@ const MOCK_QC_PHOTOS: QCPhoto[] = [
 
 // --- HELPER: Fetch Config from Backend ---
 const loadBackendConfig = async () => {
+<<<<<<< HEAD
     if (POINTSHAUL_APP_ID && POINTSHAUL_SECRET_KEY) return; // Already loaded
+=======
+    if (!isSupabaseConfigured) return; // Skip if no DB
+    if (POINTSHAUL_APP_ID && POINTSHAUL_SECRET_KEY) return; 
+>>>>>>> f6c8322 (Sure! Pl)
 
     try {
         const { data, error } = await supabase
@@ -60,37 +78,60 @@ const loadBackendConfig = async () => {
     }
 };
 
+<<<<<<< HEAD
 // --- HELPER: Parse Link (Robust) ---
 const parseLink = (input: string) => {
     const rawLink = input.trim();
     let id = '';
     let platform = 'taobao'; // Default
+=======
+// --- HELPER: Parse Link ---
+const parseLink = (input: string) => {
+    const rawLink = input.trim();
+    let id = '';
+    let platform = 'taobao'; 
+>>>>>>> f6c8322 (Sure! Pl)
 
     try {
         const urlObj = new URL(rawLink);
         const params = new URLSearchParams(urlObj.search);
 
+<<<<<<< HEAD
         // ID Extraction
+=======
+>>>>>>> f6c8322 (Sure! Pl)
         if (params.get('id')) id = params.get('id')!;
         else if (params.get('itemID')) id = params.get('itemID')!;
         else if (params.get('num_iid')) id = params.get('num_iid')!;
         else if (params.get('offerId')) id = params.get('offerId')!;
 
+<<<<<<< HEAD
         // Platform Param Detection
+=======
+>>>>>>> f6c8322 (Sure! Pl)
         const shopType = params.get('shop_type') || params.get('type') || '';
         if (shopType.toLowerCase().includes('weidian')) platform = 'weidian';
         else if (shopType.toLowerCase().includes('1688')) platform = '1688';
         
+<<<<<<< HEAD
         // Hostname Platform Detection
+=======
+>>>>>>> f6c8322 (Sure! Pl)
         if (urlObj.hostname.includes('weidian') || urlObj.hostname.includes('koudai')) platform = 'weidian';
         if (urlObj.hostname.includes('1688')) platform = '1688';
 
     } catch (e) {
+<<<<<<< HEAD
         // Not a URL, try raw ID check
         if (/^\d+$/.test(rawLink)) id = rawLink;
     }
 
     // Fallback Regex
+=======
+        if (/^\d+$/.test(rawLink)) id = rawLink;
+    }
+
+>>>>>>> f6c8322 (Sure! Pl)
     if (!id) {
         const m1688 = rawLink.match(/offer\/(\d+)\.html/);
         const mWeidian = rawLink.match(/itemID=(\d+)/i);
@@ -104,14 +145,20 @@ const parseLink = (input: string) => {
     return { id, platform };
 };
 
+<<<<<<< HEAD
 
 // --- MAIN SERVICE FUNCTION ---
 export const fetchQCPhotos = async (productUrl: string): Promise<QCPhoto[]> => {
     // 1. ID Extraction
+=======
+// --- MAIN SERVICE FUNCTION ---
+export const fetchQCPhotos = async (productUrl: string): Promise<QCPhoto[]> => {
+>>>>>>> f6c8322 (Sure! Pl)
     const { id, platform } = parseLink(productUrl);
     if (!id) throw new Error("Could not detect a valid Product ID.");
 
     // 2. SUPABASE CACHE CHECK
+<<<<<<< HEAD
     try {
         const { data: cachedData } = await supabase
             .from('qc_cache')
@@ -130,12 +177,31 @@ export const fetchQCPhotos = async (productUrl: string): Promise<QCPhoto[]> => {
     // 3. Platform Check (Optimization)
     // If Weidian or 1688, RapidAPI Taobao might not work well. 
     // We default to MOCK data immediately to avoid errors.
+=======
+    if (isSupabaseConfigured) {
+        try {
+            const { data: cachedData } = await supabase
+                .from('qc_cache')
+                .select('data')
+                .eq('product_id', id)
+                .single();
+
+            if (cachedData && cachedData.data && Array.isArray(cachedData.data) && cachedData.data.length > 0) {
+                return cachedData.data.map((p: any) => ({ ...p, provider: 'Cached' }));
+            }
+        } catch (err) {
+            // Ignore cache errors
+        }
+    }
+
+>>>>>>> f6c8322 (Sure! Pl)
     if (platform === 'weidian' || platform === '1688') {
         return MOCK_QC_PHOTOS;
     }
 
     await loadBackendConfig();
     
+<<<<<<< HEAD
     // 4. ATTEMPT FETCHING - SMART ALTERNATIVE METHOD
     try {
         // NOTE: We have disabled Pointshaul because it's restricted/complex.
@@ -144,12 +210,19 @@ export const fetchQCPhotos = async (productUrl: string): Promise<QCPhoto[]> => {
         let photos: QCPhoto[] = [];
 
         // Try RapidAPI (Taobao Reviews)
+=======
+    // 4. ATTEMPT FETCHING
+    try {
+        let photos: QCPhoto[] = [];
+
+>>>>>>> f6c8322 (Sure! Pl)
         try {
             photos = await fetchFromRapidAPI(id);
         } catch (e) {
             console.warn("RapidAPI Limit Reached or Failed.");
         }
 
+<<<<<<< HEAD
         // 5. SMART FALLBACK
         // If RapidAPI returns nothing (limit reached, expired key, or no reviews),
         // we fallback to DEMO DATA so the client sees results.
@@ -170,15 +243,35 @@ export const fetchQCPhotos = async (productUrl: string): Promise<QCPhoto[]> => {
         
     } catch (err) {
         console.log("QC Fetch: Using Demo Data (Reason: " + (err instanceof Error ? err.message : "No Data") + ")");
+=======
+        if (!photos || photos.length === 0) {
+             return MOCK_QC_PHOTOS;
+        }
+
+        // Save to cache only if we have a real DB connection
+        if (photos.length > 0 && isSupabaseConfigured) {
+            supabase.from('qc_cache').insert({ product_id: id, data: photos }).then(({ error }) => {
+                if(error) console.error("Cache write failed", error);
+            });
+        }
+        
+        return photos;
+        
+    } catch (err) {
+>>>>>>> f6c8322 (Sure! Pl)
         return MOCK_QC_PHOTOS;
     }
 };
 
+<<<<<<< HEAD
 // --- POINTSHAUL IMPLEMENTATION (DISABLED/DEPRECATED) ---
 // Keeping code for reference but not calling it.
 // const fetchFromPointshaul = async (spuNo: string): Promise<QCPhoto[]> => { ... }
 
 // --- RAPID API IMPLEMENTATION (TAOBAO REVIEWS) ---
+=======
+// --- RAPID API IMPLEMENTATION ---
+>>>>>>> f6c8322 (Sure! Pl)
 const fetchFromRapidAPI = async (itemId: string): Promise<QCPhoto[]> => {
     const apiKey = getRapidApiKey();
     const params = new URLSearchParams();
@@ -197,22 +290,32 @@ const fetchFromRapidAPI = async (itemId: string): Promise<QCPhoto[]> => {
             headers: { 'x-rapidapi-key': apiKey, 'x-rapidapi-host': RAPID_API_HOST }
         });
 
+<<<<<<< HEAD
         // Handle Status Codes
+=======
+>>>>>>> f6c8322 (Sure! Pl)
         if (response.status === 429 || response.status === 401 || response.status === 403) {
             throw new Error("API Limit Reached");
         }
 
+<<<<<<< HEAD
         // Handle non-JSON responses
+=======
+>>>>>>> f6c8322 (Sure! Pl)
         const text = await response.text();
         let data;
         try {
             data = JSON.parse(text);
         } catch (e) {
+<<<<<<< HEAD
             throw new Error(`Invalid API Response: ${response.status}`);
         }
 
         if (data.error_code === 496 || data.code === 496) {
             throw new Error("API Subscription Error (496)");
+=======
+            throw new Error(`Invalid API Response`);
+>>>>>>> f6c8322 (Sure! Pl)
         }
 
         if (!response.ok) throw new Error(`Provider Error: ${response.status}`);
@@ -251,6 +354,7 @@ const getRapidApiKey = () => {
         if (stored && stored.trim() !== '') return stored;
     }
     return RAPID_API_KEY_DEFAULT;
+<<<<<<< HEAD
 };
 
 // --- ENCRYPTION HELPERS (Kept for reference) ---
@@ -267,3 +371,6 @@ const decryptAES = (encryptedBase64: string, key: string): string => {
     const decrypted = CryptoJS.AES.decrypt(base64, keyParsed, { mode: CryptoJS.mode.ECB, padding: CryptoJS.pad.Pkcs7 });
     return decrypted.toString(CryptoJS.enc.Utf8);
 };
+=======
+};
+>>>>>>> f6c8322 (Sure! Pl)

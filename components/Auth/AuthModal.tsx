@@ -1,6 +1,11 @@
+<<<<<<< HEAD
 
 import React, { useState } from 'react';
 import { X, Mail, Loader2, AlertCircle, Info } from 'lucide-react';
+=======
+import React, { useState } from 'react';
+import { X, Mail, Loader2, AlertCircle, CheckCircle2, Chrome, Github, MessageCircle, HelpCircle } from 'lucide-react';
+>>>>>>> f6c8322 (Sure! Pl)
 import { supabase, isSupabaseConfigured } from '../../services/supabaseClient';
 
 interface AuthModalProps {
@@ -9,6 +14,7 @@ interface AuthModalProps {
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({ onClose }) => {
+<<<<<<< HEAD
   const [isLogin, setIsLogin] = useState(true); // Toggle Login/Signup
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -19,10 +25,52 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose }) => {
   // New state to handle email verification flow
   const [needsVerification, setNeedsVerification] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
+=======
+  const [isLogin, setIsLogin] = useState(true);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [needsVerification, setNeedsVerification] = useState(false);
+
+  const handleOAuth = async (provider: 'google' | 'discord') => {
+    setError('');
+    setLoading(true);
+    try {
+        // Robust redirect URL handling
+        const redirectUrl = window.location.origin + window.location.pathname;
+        
+        const { error: authErr } = await supabase.auth.signInWithOAuth({
+            provider,
+            options: {
+                redirectTo: redirectUrl,
+                queryParams: {
+                    access_type: 'offline',
+                    prompt: 'select_account',
+                }
+            }
+        });
+        
+        if (authErr) throw authErr;
+    } catch (err: any) {
+        console.error(`OAuth Error (${provider}):`, err);
+        let msg = err.message || `Failed to login with ${provider}`;
+        
+        if (msg.includes('403') || err.status === 403) {
+            msg = "403 Forbidden: Please check if this Redirect URL is added in your Supabase Dashboard: " + window.location.origin;
+        }
+        
+        setError(msg);
+        setLoading(false);
+    }
+  };
+>>>>>>> f6c8322 (Sure! Pl)
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+<<<<<<< HEAD
     setNeedsVerification(false);
 
     if (!isSupabaseConfigured) {
@@ -78,12 +126,51 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose }) => {
             msg = 'The email address format is invalid. Check for spaces.';
         }
         
+=======
+    
+    if (!isSupabaseConfigured) {
+        setError("Supabase configuration missing.");
+        return;
+    }
+    
+    setLoading(true);
+
+    try {
+        if (isLogin) {
+            const { error: logErr } = await supabase.auth.signInWithPassword({
+                email: email.trim(),
+                password: password.trim(),
+            });
+            if (logErr) throw logErr;
+            onClose();
+        } else {
+            const { error: signErr } = await supabase.auth.signUp({
+                email: email.trim(),
+                password: password.trim(),
+                options: {
+                    data: { username: username.trim() }
+                }
+            });
+            if (signErr) throw signErr;
+            setNeedsVerification(true);
+        }
+    } catch (err: any) {
+        console.error("Auth Operation Failed:", err);
+        let msg = err.message || 'Error';
+        
+        if (msg.includes('Email not confirmed')) {
+            setNeedsVerification(true);
+        } else if (msg.includes('Invalid login credentials')) {
+            msg = 'Wrong email or password.';
+        }
+>>>>>>> f6c8322 (Sure! Pl)
         setError(msg);
     } finally {
         setLoading(false);
     }
   };
 
+<<<<<<< HEAD
   const handleResendEmail = async () => {
     setResendLoading(true);
     const cleanEmail = email.trim();
@@ -175,11 +262,30 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose }) => {
                         Back to Login
                     </button>
                 </div>
+=======
+  if (needsVerification) {
+      return (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in-up">
+            <div className="bg-[#111] w-full max-w-md rounded-3xl border border-white/10 p-8 text-center relative shadow-2xl">
+                <button onClick={onClose} className="absolute top-4 right-4 text-[#666] hover:text-white"><X size={24} /></button>
+                <div className="w-16 h-16 bg-emerald-500/10 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <Mail size={32} />
+                </div>
+                <h2 className="text-2xl font-bold text-white mb-2">Check Your Email</h2>
+                <p className="text-[#888] mb-6 text-sm leading-relaxed">
+                    A confirmation link has been sent to <b>{email}</b>. <br/><br/>
+                    Aapko pehle email confirm karni hogi, uske baad hi login hoga. 
+                </p>
+                <button onClick={() => { setNeedsVerification(false); setIsLogin(true); }} className="w-full py-3 bg-white text-black font-bold rounded-xl">
+                    Back to Login
+                </button>
+>>>>>>> f6c8322 (Sure! Pl)
             </div>
         </div>
       );
   }
 
+<<<<<<< HEAD
   // --- RENDER: LOGIN/SIGNUP FORM ---
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in-up">
@@ -225,11 +331,43 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose }) => {
             <div className="h-px bg-[#222] flex-1"></div>
             <span className="text-[#444] text-[10px] font-bold uppercase tracking-widest">OR</span>
             <div className="h-px bg-[#222] flex-1"></div>
+=======
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+      <div className="bg-[#111] w-full max-w-md rounded-3xl border border-white/10 shadow-2xl overflow-hidden relative">
+        <button onClick={onClose} className="absolute top-4 right-4 text-[#666] hover:text-white"><X size={24} /></button>
+        <div className="p-8">
+          <h2 className="text-2xl font-bold text-center mb-6 text-white">{isLogin ? 'Welcome Back' : 'Create Account'}</h2>
+          
+          {/* Social Login Buttons */}
+          <div className="grid grid-cols-2 gap-3 mb-6">
+              <button 
+                onClick={() => handleOAuth('google')}
+                disabled={loading}
+                className="flex items-center justify-center gap-2 py-3 bg-[#1A1A1A] hover:bg-[#252525] border border-white/5 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-50"
+              >
+                  <Chrome size={18} className="text-red-500" /> Google
+              </button>
+              <button 
+                onClick={() => handleOAuth('discord')}
+                disabled={loading}
+                className="flex items-center justify-center gap-2 py-3 bg-[#1A1A1A] hover:bg-[#252525] border border-white/5 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-50"
+              >
+                  <MessageCircle size={18} className="text-indigo-500" /> Discord
+              </button>
+          </div>
+
+          <div className="flex items-center gap-4 mb-6">
+              <div className="h-px bg-white/5 flex-1"></div>
+              <span className="text-[10px] text-[#444] font-bold uppercase tracking-widest">OR EMAIL</span>
+              <div className="h-px bg-white/5 flex-1"></div>
+>>>>>>> f6c8322 (Sure! Pl)
           </div>
 
           <form onSubmit={handleAuth} className="space-y-4">
             {!isLogin && (
                 <div>
+<<<<<<< HEAD
                     <label className="block text-xs font-bold text-[#666] uppercase tracking-wider mb-2">Username</label>
                     <input 
                         type="text" 
@@ -291,6 +429,42 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose }) => {
                 onClick={() => { setIsLogin(!isLogin); setError(''); }}
                 className="text-sm text-[#666] hover:text-primary transition-colors font-medium"
               >
+=======
+                    <label className="block text-[10px] font-bold text-[#666] uppercase mb-1.5 ml-1">Username</label>
+                    <input type="text" value={username} onChange={e => setUsername(e.target.value)} required className="w-full bg-[#0A0A0A] border border-white/5 rounded-xl p-3.5 text-white outline-none focus:border-primary transition-all" placeholder="reps_king" />
+                </div>
+            )}
+            <div>
+              <label className="block text-[10px] font-bold text-[#666] uppercase mb-1.5 ml-1">Email Address</label>
+              <input type="email" value={email} onChange={e => setEmail(e.target.value)} required className="w-full bg-[#0A0A0A] border border-white/5 rounded-xl p-3.5 text-white outline-none focus:border-primary transition-all" placeholder="name@example.com" />
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-[#666] uppercase mb-1.5 ml-1">Password</label>
+              <input type="password" value={password} onChange={e => setPassword(e.target.value)} required className="w-full bg-[#0A0A0A] border border-white/5 rounded-xl p-3.5 text-white outline-none focus:border-primary transition-all" placeholder="••••••••" />
+            </div>
+
+            {error && (
+                <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-lg space-y-2">
+                    <div className="flex items-center gap-2">
+                         <AlertCircle size={14} className="shrink-0" /> <span>{error}</span>
+                    </div>
+                    {error.includes('403') && (
+                        <div className="pt-2 border-t border-red-500/20 flex flex-col gap-1 text-[10px] opacity-80">
+                            <p>1. Go to Supabase {'>'} Auth {'>'} URL Configuration</p>
+                            <p>2. Add <b>{window.location.origin}</b> to Redirect URLs</p>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            <button type="submit" disabled={loading} className="w-full py-4 bg-primary hover:bg-primaryHover text-black font-bold rounded-xl flex items-center justify-center gap-2 transition-all">
+                {loading ? <Loader2 className="animate-spin" size={20} /> : (isLogin ? 'Sign In' : 'Create Account')}
+            </button>
+          </form>
+          
+          <div className="mt-6 text-center">
+              <button onClick={() => setIsLogin(!isLogin)} className="text-sm text-[#666] hover:text-white transition-colors">
+>>>>>>> f6c8322 (Sure! Pl)
                   {isLogin ? "Don't have an account? Sign Up" : "Already have an account? Login"}
               </button>
           </div>
@@ -298,4 +472,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose }) => {
       </div>
     </div>
   );
+<<<<<<< HEAD
 };
+=======
+};
+>>>>>>> f6c8322 (Sure! Pl)

@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 
+=======
+>>>>>>> f6c8322 (Sure! Pl)
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -29,7 +32,13 @@ import {
   BrainCircuit,
   Loader2,
   FileSpreadsheet,
+<<<<<<< HEAD
   Settings
+=======
+  Settings,
+  Copy,
+  Terminal
+>>>>>>> f6c8322 (Sure! Pl)
 } from 'lucide-react';
 import { supabase } from '../services/supabaseClient';
 import { User, Rank, Seller, Spreadsheet } from '../types';
@@ -630,6 +639,7 @@ const UsersManager = ({ onUserCountChange }: { onUserCountChange: (count: number
   );
 };
 
+<<<<<<< HEAD
 const AccessSetupGuide = () => (
     <div className="animate-fade-in-up space-y-8">
         
@@ -672,10 +682,128 @@ const AccessSetupGuide = () => (
                      </ol>
                      <div className="bg-blue-500/10 text-blue-400 p-3 rounded-xl text-xs border border-blue-500/20">
                         <b>Note:</b> The default key used in the app is shared and often hits rate limits. Using your own key ensures 100% uptime.
+=======
+const AccessSetupGuide = () => {
+    const copyToClipboard = (text: string) => {
+        navigator.clipboard.writeText(text);
+        alert("Copied to clipboard!");
+    };
+
+    return (
+        <div className="animate-fade-in-up space-y-8">
+            
+            {/* 403 FIX SECTION */}
+            <div className="bg-red-500/5 border border-red-500/20 rounded-[24px] p-8 shadow-2xl relative overflow-hidden group">
+                 <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <AlertTriangle size={120} />
+                 </div>
+                 
+                 <div className="flex items-center gap-4 mb-6 relative z-10">
+                    <div className="p-3 bg-red-500/10 rounded-xl text-red-500 border border-red-500/20">
+                        <Terminal size={24} />
+                    </div>
+                    <div>
+                        <h2 className="text-2xl font-bold text-white">Fix 403 Authentication Error</h2>
+                        <p className="text-red-400/80 text-sm font-medium">Follow these exact steps to enable Google/Discord login.</p>
+                    </div>
+                 </div>
+
+                 <div className="space-y-6 relative z-10">
+                    <div className="bg-[#0A0A0A] p-6 rounded-2xl border border-white/5 space-y-4">
+                        <p className="text-white text-sm font-medium">Aapko ye URL apne Supabase Dashboard mein add karna hoga:</p>
+                        
+                        <div className="flex items-center gap-3 bg-[#111] p-4 rounded-xl border border-white/10 group/item">
+                            <code className="flex-1 text-primary font-mono text-sm">{window.location.origin}</code>
+                            <button 
+                                onClick={() => copyToClipboard(window.location.origin)}
+                                className="p-2 hover:bg-white/10 rounded-lg text-[#666] hover:text-white transition-all"
+                            >
+                                <Copy size={18} />
+                            </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                             <div className="p-4 bg-white/5 rounded-xl border border-white/5">
+                                <span className="text-[10px] font-bold text-primary uppercase block mb-1">Step 1</span>
+                                <p className="text-xs text-slate-300">Supabase Dashboard {'>'} <b>Authentication</b> {'>'} <b>URL Configuration</b></p>
+                             </div>
+                             <div className="p-4 bg-white/5 rounded-xl border border-white/5">
+                                <span className="text-[10px] font-bold text-primary uppercase block mb-1">Step 2</span>
+                                <p className="text-xs text-slate-300"><b>Site URL</b> aur <b>Redirect URLs</b> mein oper wala URL paste karein.</p>
+                             </div>
+                        </div>
+                    </div>
+                 </div>
+            </div>
+
+            {/* API Credentials */}
+            <div className="bg-[#111] border border-white/5 rounded-[24px] p-8">
+                 <div className="flex items-center gap-4 mb-6">
+                    <div className="p-3 bg-emerald-500/10 rounded-xl text-emerald-500 border border-emerald-500/20">
+                        <Key size={24} />
+                    </div>
+                    <div>
+                        <h2 className="text-2xl font-bold text-white">API Credentials Setup</h2>
+                        <p className="text-[#666] text-sm font-medium">Get your own keys to unlock full features.</p>
+                    </div>
+                 </div>
+
+                 <div className="space-y-6">
+                     {/* QC API Keys */}
+                     <div className="bg-[#1A1A1A] border border-white/10 p-6 rounded-2xl">
+                         <h4 className="text-white font-bold mb-4 flex items-center gap-2">
+                            <Server size={18} className="text-primary" /> 1. QC Service (Pointshaul)
+                         </h4>
+                         <ol className="list-decimal list-inside text-sm text-[#888] space-y-2 mb-4">
+                            <li>Go to <b>pointshaul.com</b> and register for an account.</li>
+                            <li>Navigate to the API section to generate an <b>App ID</b> and <b>Secret Key</b>.</li>
+                            <li>You may also need an <b>Invite Code</b> from their Discord.</li>
+                            <li>Paste these keys in the <b>Config Tab</b> above.</li>
+                         </ol>
+                     </div>
+
+                     {/* Rapid API Keys */}
+                     <div className="bg-[#1A1A1A] border border-white/10 p-6 rounded-2xl">
+                         <h4 className="text-white font-bold mb-4 flex items-center gap-2">
+                            <Globe size={18} className="text-blue-500" /> 2. Product Search (RapidAPI)
+                         </h4>
+                         <ol className="list-decimal list-inside text-sm text-[#888] space-y-2 mb-4">
+                            <li>Go to <b>rapidapi.com</b> and search for "Taobao Advanced".</li>
+                            <li>Subscribe to a plan (Free or Pro).</li>
+                            <li>Copy your <b>X-RapidAPI-Key</b>.</li>
+                            <li>Paste it in the <b>Config Tab</b> above.</li>
+                         </ol>
+                     </div>
+                 </div>
+            </div>
+
+            {/* Database Setup */}
+             <div className="bg-[#111] border border-white/5 rounded-[24px] p-8">
+                 <div className="flex items-center gap-4 mb-6">
+                    <div className="p-3 bg-indigo-500/10 rounded-xl text-indigo-500 border border-indigo-500/20">
+                        <Database size={24} />
+                    </div>
+                    <div>
+                        <h2 className="text-2xl font-bold text-white">Database Setup (Supabase)</h2>
+                        <p className="text-[#666] text-sm font-medium">Run this SQL to create the backend tables for these keys.</p>
+                    </div>
+                 </div>
+
+                 <div className="space-y-4">
+                     <div className="bg-black/40 p-4 rounded-xl border border-white/10 font-mono text-xs text-gray-300 overflow-x-auto">
+                        <p className="text-[#666] mb-2">-- 1. Create App Settings (For storing secrets)</p>
+                        <code className="block text-emerald-400 mb-4">
+                            create table app_settings (<br/>
+                            &nbsp;&nbsp;key text primary key,<br/>
+                            &nbsp;&nbsp;value text<br/>
+                            );
+                        </code>
+>>>>>>> f6c8322 (Sure! Pl)
                      </div>
                  </div>
              </div>
         </div>
+<<<<<<< HEAD
 
         {/* Database Setup */}
          <div className="bg-[#111] border border-white/5 rounded-[24px] p-8">
@@ -703,6 +831,10 @@ const AccessSetupGuide = () => (
          </div>
     </div>
 );
+=======
+    );
+};
+>>>>>>> f6c8322 (Sure! Pl)
 
 const SystemStatusReport = () => (
     <div className="space-y-6 animate-fade-in-up">
@@ -794,4 +926,8 @@ export const Admin: React.FC = () => {
       </div>
     </div>
   );
+<<<<<<< HEAD
 };
+=======
+};
+>>>>>>> f6c8322 (Sure! Pl)
