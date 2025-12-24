@@ -144,12 +144,15 @@ const App: React.FC = () => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log("Auth Event:", event);
->>>>>>> f6c8322 (Sure! Pl)
       if (session) {
         fetchUserProfile(session.user.id, session.user.email);
       } else {
         setUser(null);
         setSessionLoading(false);
+      } else if (event === 'USER_UPDATED') {
+        if (session) {
+          await fetchUserProfile(session.user.id, session.user.email);
+        }
       }
     });
 

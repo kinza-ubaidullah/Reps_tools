@@ -1,8 +1,3 @@
-<<<<<<< HEAD
-
-import { Product } from '../types';
-import { supabase } from './supabaseClient';
-=======
 import { Product } from '../types';
 import { supabase, isSupabaseConfigured } from './supabaseClient';
 >>>>>>> f6c8322 (Sure! Pl)
@@ -132,7 +127,7 @@ const getApiKey = async (userKey?: string): Promise<string> => {
                 .from('app_settings')
                 .select('value')
                 .eq('key', 'rapid_api_key')
-                .single();
+                .maybeSingle();
                 
             if (data && data.value) {
                 CACHED_API_KEY = data.value;
@@ -210,7 +205,13 @@ export const searchTaobaoProducts = async (
       return getMockResults(query, platform);
   }
 
+  
   const apiKey = await getApiKey(userKey);
+  
+  if (!apiKey) {
+      console.warn('No RapidAPI key available. Using Demo Mode.');
+      return getMockResults(query, platform);
+  }
 
   try {
     const params = new URLSearchParams();

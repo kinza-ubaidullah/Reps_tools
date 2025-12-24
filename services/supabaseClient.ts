@@ -65,7 +65,7 @@ export const supabase = createClient(clientUrl, clientKey, {
         lock: virtualLock as any, 
         persistSession: true,
         autoRefreshToken: true,
-        detectSessionInUrl: false,
+        detectSessionInUrl: true, // Enable to detect OAuth callback tokens in URL
         storageKey: 'anyreps-auth-token',
         storage: typeof window !== 'undefined' ? window.localStorage : undefined,
 >>>>>>> f6c8322 (Sure! Pl)
