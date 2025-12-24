@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { HashRouter } from 'react-router-dom';
+import { createHashRouter, RouterProvider } from 'react-router-dom';
 import App from './App';
 
 const rootElement = document.getElementById('root');
@@ -9,8 +9,15 @@ if (!rootElement) {
 }
 
 const root = ReactDOM.createRoot(rootElement);
+
+const router = createHashRouter(
+  [
+    // Use a wildcard so paths like '/error=...' and OAuth callback fragments land inside App
+    { path: '/*', element: <App /> }
+  ],
+  { future: { v7_startTransition: true, v7_relativeSplatPath: true } }
+);
+
 root.render(
-  <HashRouter>
-    <App />
-  </HashRouter>
+  <RouterProvider router={router} />
 );
